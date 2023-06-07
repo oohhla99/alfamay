@@ -1,28 +1,28 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import { BigNumber, ethers, utils } from 'ethers';
-import { Chain, Hop } from '@hop-protocol/sdk';
+import React, { useState } from "react";
+import PropTypes from "prop-types";
+import { BigNumber, ethers, utils } from "ethers";
+import { Chain, Hop } from "@hop-protocol/sdk";
 
-import erc20_abi from '../../abis/erc20.json';
-import swap0x_abi from '../../abis/swap0x.json';
+import erc20_abi from "../../abis/erc20.json";
+import swap0x_abi from "../../abis/swap0x.json";
 
-import './Metadrop.css';
+import "../airdrop-bot.css";
 
 const Metadrop = (props) => {
-  const initialSwapAmount = utils.parseEther('0.005');
+  const initialSwapAmount = utils.parseEther("0.005");
 
-  const eth0xApi = 'https://api.0x.org/swap/v1/quote?';
-  const arb0xApi = 'https://arbitrum.api.0x.org/swap/v1/quote?';
-  const opt0xApi = 'https://optimism.api.0x.org/swap/v1/quote?';
+  const eth0xApi = "https://api.0x.org/swap/v1/quote?";
+  const arb0xApi = "https://arbitrum.api.0x.org/swap/v1/quote?";
+  const opt0xApi = "https://optimism.api.0x.org/swap/v1/quote?";
 
-  const ethSwap0xAddress = '0x5724b5bc7f54a52f4014e5f496ae380f89c881a1';
-  const arbSwap0xAddress = '0x2fe6592b2efca795281129144152925284d6d914';
-  const optSwap0xAddress = '0x2fe6592b2efca795281129144152925284d6d914';
+  const ethSwap0xAddress = "0x5724b5bc7f54a52f4014e5f496ae380f89c881a1";
+  const arbSwap0xAddress = "0x2fe6592b2efca795281129144152925284d6d914";
+  const optSwap0xAddress = "0x2fe6592b2efca795281129144152925284d6d914";
 
-  const zeroXNativeToken = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+  const zeroXNativeToken = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
   const [running, setRunning] = useState(false);
-  const [status, setStatus] = useState('Collect');
+  const [status, setStatus] = useState("Collect");
 
   const swapQuote = async (baseApi, sellAmount, token1, token2) => {
     return await (
@@ -39,10 +39,10 @@ const Metadrop = (props) => {
     tokens,
     chainIdentifier
   ) => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     const { chainId } = await provider.getNetwork();
     if (chainId !== chainIdentifier) {
-      await provider.send('wallet_switchEthereumChain', [
+      await provider.send("wallet_switchEthereumChain", [
         {
           chainId: chainIdentifier.toString(16),
         },
@@ -65,7 +65,7 @@ const Metadrop = (props) => {
       const token1 = tokens[i];
       const token2 = tokens[i + 1];
 
-      if (token1 !== 'ETH' && !sellTokenApprovalDone[token1]) {
+      if (token1 !== "ETH" && !sellTokenApprovalDone[token1]) {
         const erc20Contract = new ethers.Contract(
           token1,
           erc20_abi.abi,
@@ -86,7 +86,7 @@ const Metadrop = (props) => {
         }
       }
 
-      if (token1 === 'ETH') {
+      if (token1 === "ETH") {
         messageValue = messageValue.add(sellAmount);
       }
 
@@ -121,14 +121,14 @@ const Metadrop = (props) => {
       value: messageValue,
     };
 
-    if (chainId == '0xa') {
-      multicallParams['gasLimit'] = 3500000;
+    if (chainId == "0xa") {
+      multicallParams["gasLimit"] = 3500000;
     } else {
       const estimatedGas = await Swap0xContract.estimateGas.multicall(
         multicallData.map((x) => x.data),
         multicallParams
       );
-      multicallParams['gasLimit'] = estimatedGas.mul(150).div(100);
+      multicallParams["gasLimit"] = estimatedGas.mul(150).div(100);
     }
 
     const swapTx = await Swap0xContract.multicall(
@@ -139,21 +139,21 @@ const Metadrop = (props) => {
   };
 
   const moveEthToArbitrum = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     const { chainId } = await provider.getNetwork();
     if (chainId !== 1) {
-      await provider.send('wallet_switchEthereumChain', [
+      await provider.send("wallet_switchEthereumChain", [
         {
-          chainId: '0x1',
+          chainId: "0x1",
         },
       ]);
     }
     const signer = provider.getSigner();
-    const hop = new Hop('mainnet', signer);
-    const bridge = hop.bridge('ETH');
+    const hop = new Hop("mainnet", signer);
+    const bridge = hop.bridge("ETH");
 
     const bridgeTx = await bridge.send(
-      utils.parseEther('0.045'),
+      utils.parseEther("0.045"),
       Chain.Ethereum,
       Chain.Arbitrum
     );
@@ -165,26 +165,26 @@ const Metadrop = (props) => {
       bridgeStatus = await bridge.getTransferStatus(bridgeTx.hash);
     }
 
-    setStatus('Sleeping for 2.5 minutes');
+    setStatus("Sleeping for 2.5 minutes");
     await new Promise((resolve) => setTimeout(resolve, 150000));
   };
 
   const moveArbEthToOptimism = async () => {
-    const provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+    const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     const { chainId } = await provider.getNetwork();
     if (chainId !== 42161) {
-      await provider.send('wallet_switchEthereumChain', [
+      await provider.send("wallet_switchEthereumChain", [
         {
-          chainId: '0xa4b1',
+          chainId: "0xa4b1",
         },
       ]);
     }
     const signer = provider.getSigner();
-    const hop = new Hop('mainnet', signer);
-    const bridge = hop.bridge('ETH');
+    const hop = new Hop("mainnet", signer);
+    const bridge = hop.bridge("ETH");
 
     const bridgeTx = await bridge.send(
-      utils.parseEther('0.025'),
+      utils.parseEther("0.025"),
       Chain.Arbitrum,
       Chain.Optimism
     );
@@ -196,60 +196,60 @@ const Metadrop = (props) => {
       bridgeStatus = await bridge.getTransferStatus(bridgeTx.hash);
     }
 
-    setStatus('Sleeping for 2.5 minutes');
+    setStatus("Sleeping for 2.5 minutes");
     await new Promise((resolve) => setTimeout(resolve, 150000));
   };
 
   const metadrop = async () => {
     try {
-      setStatus('Performing swaps on Ethereum...');
+      setStatus("Performing swaps on Ethereum...");
       await performSwaps(
         eth0xApi,
         ethSwap0xAddress,
         [
-          'ETH',
-          '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-          '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          'ETH',
+          "ETH",
+          "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+          "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+          "ETH",
         ],
-        '0x1'
+        "0x1"
       );
 
-      setStatus('Bridge ETH to Arbitrum...');
+      setStatus("Bridge ETH to Arbitrum...");
       await moveEthToArbitrum();
 
-      setStatus('Performing swaps on Arbitrum...');
+      setStatus("Performing swaps on Arbitrum...");
       await performSwaps(
         arb0xApi,
         arbSwap0xAddress,
         [
-          'ETH',
-          '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
-          '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-          'ETH',
+          "ETH",
+          "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+          "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+          "ETH",
         ],
-        '0xa4b1'
+        "0xa4b1"
       );
 
-      setStatus('Bridge ETH to Optimism...');
+      setStatus("Bridge ETH to Optimism...");
       await moveArbEthToOptimism();
 
-      setStatus('Performing swaps on Optimism...');
+      setStatus("Performing swaps on Optimism...");
       await performSwaps(
         opt0xApi,
         optSwap0xAddress,
         [
-          'ETH',
-          '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
-          '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
-          'ETH',
+          "ETH",
+          "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+          "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+          "ETH",
         ],
-        '0xa'
+        "0xa"
       );
 
-      setStatus('Finished');
+      setStatus("Finished");
     } catch (error) {
-      setStatus('Error encountered');
+      setStatus("Error encountered");
       console.log(error);
     }
     setRunning(false);
@@ -263,7 +263,7 @@ const Metadrop = (props) => {
             setRunning(true);
             metadrop();
           } else {
-            alert('Cannot run multiple times');
+            alert("Cannot run multiple times");
           }
         }}
         className="component1-button themebutton button"
@@ -278,7 +278,7 @@ const Metadrop = (props) => {
 };
 
 Metadrop.defaultProps = {
-  rootClassName: '',
+  rootClassName: "",
 };
 
 Metadrop.propTypes = {
